@@ -33,3 +33,12 @@ jobs:
       run: npm run build --if-present
     - name: run tests
       run: npm test
+    - uses: mr-smithers-excellent/docker-build-push@v7
+      name: Build & push Docker image
+      with:
+        image: mystrybox/pipelinestesting
+        tags: v1, latest
+        registry: registry-url.io
+        dockerfile: Dockerfile.ci
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
