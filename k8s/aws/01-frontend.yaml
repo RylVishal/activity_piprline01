@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: pinger-app
+  labels:
+    app: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: <AWS_ACCOUNT_ID>.dkr.ecr.ap-south-1.amazonaws.com/learnathon-frontend:v1
+          ports:
+            - containerPort: 9000
+          env:
+            - name: PINGER_BASE_URL
+              value: "http://pinger-v1-service:3000"   # points at v1 — see README for how to cut over to v2
+            - name: DETAILS_BASE_URL
+              value: "http://details-service:4000"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+          readinessProbe:
+            tcpSocket:
+              port: 9000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 9000
+            initialDelaySeconds: 10
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  namespace: pinger-app
+  labels:
+    app: frontend
+spec:
+  selector:
+    app: frontend
+  ports:
+    - port: 9000
+      targetPort: 9000
+  type: ClusterIP

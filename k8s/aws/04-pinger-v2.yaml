@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pinger-v2
+  namespace: pinger-app
+  labels:
+    app: pinger
+    version: v2
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pinger
+      version: v2
+  template:
+    metadata:
+      labels:
+        app: pinger
+        version: v2
+    spec:
+      containers:
+        - name: pinger
+          image: <AWS_ACCOUNT_ID>.dkr.ecr.ap-south-1.amazonaws.com/learnathon-pinger-v2:v1
+          ports:
+            - containerPort: 3000
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+          readinessProbe:
+            tcpSocket:
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pinger-v2-service
+  namespace: pinger-app
+  labels:
+    app: pinger
+    version: v2
+spec:
+  selector:
+    app: pinger
+    version: v2
+  ports:
+    - port: 3000
+      targetPort: 3000
+  type: ClusterIP
+# NOTE: v2 runs and is reachable inside the cluster (e.g. from another pod via
+# curl http://pinger-v2-service:3000) but nothing routes user traffic to it yet.
+# To cut the frontend over to v2, see README "Switching frontend to v2".

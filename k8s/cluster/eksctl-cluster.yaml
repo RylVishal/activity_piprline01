@@ -1,0 +1,22 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: pinger-eks
+  region: ap-south-1
+  version: "1.31"
+
+iam:
+  withOIDC: true   # required for ALB controller + GitHub Actions IAM roles
+
+managedNodeGroups:
+  - name: pinger-workers
+    instanceType: t3.small
+    desiredCapacity: 3
+    minSize: 2
+    maxSize: 4
+    volumeSize: 20
+    labels:
+      role: worker
+    tags:
+      project: pinger-learnathon

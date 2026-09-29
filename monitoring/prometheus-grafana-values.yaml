@@ -1,0 +1,33 @@
+# Used with: helm install monitoring prometheus-community/kube-prometheus-stack -n monitoring -f this-file
+# Kept lean on purpose (no EBS-backed persistence, no extra LoadBalancers) to avoid burning AWS credits.
+# You get cluster/node/pod metrics out of the box. App-level metrics (req rate, latency) need
+# prom-client added to the Node services later — not included here, see README "Next steps".
+
+prometheus:
+  prometheusSpec:
+    retention: 6h
+    resources:
+      requests:
+        cpu: 200m
+        memory: 400Mi
+      limits:
+        cpu: 500m
+        memory: 800Mi
+    storageSpec: {}   # no PVC -> ephemeral, data lost on pod restart, zero EBS cost
+
+grafana:
+  adminPassword: changeme123   # change this, or better: use --set on install instead of committing it
+  persistence:
+    enabled: false
+  service:
+    type: ClusterIP   # access via `kubectl port-forward` to avoid a second ALB/NLB cost
+  resources:
+    requests:
+      cpu: 100m
+      memory: 150Mi
+    limits:
+      cpu: 200m
+      memory: 300Mi
+
+alertmanager:
+  enabled: false   # not needed yet for a learning setup; flip on later if you add alert rules
